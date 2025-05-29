@@ -1,0 +1,8 @@
+site_name: web-2025
+nav:
+  - Главная: index.md
+  - lr1:
+    - common: lr1.md
+    - api: lr1_api.md
+theme:
+  name: readthedocs
