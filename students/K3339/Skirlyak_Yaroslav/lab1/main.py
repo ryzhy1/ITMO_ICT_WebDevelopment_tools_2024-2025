@@ -17,8 +17,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Создаём таблицы в базе данных
-engine = create_engine(os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"))
+engine = create_engine(os.getenv("DB_URL"))
 SQLModel.metadata.create_all(engine)
 
 app.include_router(finance_router, prefix="/finance", tags=["finance"])

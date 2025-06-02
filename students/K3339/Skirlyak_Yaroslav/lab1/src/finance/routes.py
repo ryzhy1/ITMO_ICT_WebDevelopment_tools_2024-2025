@@ -106,14 +106,25 @@ def delete_category(category_id: int, db: Session = Depends(get_session), curren
     return {"detail": "Category deleted"}
 
 @router.post("/transactions", response_model=TransactionRead)
-def create_transaction(transaction: TransactionCreate, db: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+def create_transaction(
+    transaction: TransactionCreate,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
     user_category = db.exec(
-        select(UserCategory)
-        .where(UserCategory.user_id == current_user.id, UserCategory.category_id == transaction.category_id)
+        select(UserCategory).where(
+            UserCategory.user_id == current_user.id,
+            UserCategory.category_id == transaction.category_id,
+        )
     ).first()
     if not user_category:
         raise HTTPException(status_code=403, detail="Access to category denied")
-    db_transaction = Transaction(**transaction.dict(), user_id=current_user.id)
+
+    data = transaction.dict()
+    data.pop("user_id", None)
+
+    db_transaction = Transaction(**data, user_id=current_user.id)
+
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)

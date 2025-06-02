@@ -3,8 +3,8 @@ from typing import List, Optional
 from datetime import datetime
 
 class UserCategory(SQLModel, table=True):
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
-    category_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
+    user_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
+    category_id: int = Field(default=None, foreign_key="category.id", primary_key=True)
     is_default: bool = False
 
 class User(SQLModel, table=True):

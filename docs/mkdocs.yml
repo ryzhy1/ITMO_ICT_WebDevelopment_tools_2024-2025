@@ -3,6 +3,6 @@ nav:
   - Главная: index.md
   - lr1:
     - common: lr1.md
-    - api: lr1_api.md
+    - api: lr1-api.md
 theme:
   name: readthedocs
