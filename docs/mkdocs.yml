@@ -4,5 +4,8 @@ nav:
   - lr1:
     - common: lr1.md
     - api: lr1-api.md
+  - lr2:
+      - task 1: lr2_1.md
+      - task 2: lr2_2.md
 theme:
   name: readthedocs
