@@ -91,7 +91,7 @@ function onWorkerMessage (e) {
 
 if (!window.Worker) {
   console.log('Web Worker API not supported');
-  // load index in main.py thread
+  // load index in main thread
   $.getScript(joinUrl(base_url, "search/worker.js")).done(function () {
     console.log('Loaded worker');
     init();

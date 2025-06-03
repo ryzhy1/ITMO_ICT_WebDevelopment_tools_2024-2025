@@ -17,7 +17,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-engine = create_engine(os.getenv("DB_URL"))
+engine = create_engine(os.getenv("DB_URL", "postgresql://user:password@db/dbname"))
 SQLModel.metadata.create_all(engine)
 
 app.include_router(finance_router, prefix="/finance", tags=["finance"])

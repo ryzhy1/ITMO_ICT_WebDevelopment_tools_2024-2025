@@ -43,3 +43,8 @@ class Budget(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="budgets")
     category_id: Optional[int] = Field(default=None, foreign_key="category.id")
     category: Optional[Category] = Relationship(back_populates="budgets")
+
+class Categories(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, nullable=False)
+    description: Optional[str] = None

@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 PG_OPTS = {
     'host': os.getenv('PGHOST', 'localhost'),
     'port': int(os.getenv('PGPORT', '5432')),
-    'user': os.getenv('PGUSER', 'postgres'),
-    'password': os.getenv('PGPASSWORD', 'postgres'),
-    'database': os.getenv('PGDATABASE', 'postgres'),
+    'user': os.getenv('PGUSER', 'user'),
+    'password': os.getenv('PGPASSWORD', 'password'),
+    'database': os.getenv('PGDATABASE', 'dbname'),
 }
 
 def parse_name_and_desc(html: str) -> Tuple[str, str]:
@@ -107,10 +107,18 @@ class AsyncioParser:
             tasks = [parse_and_save_async(u, pool, session, sem) for u in self.urls]
             await asyncio.gather(*tasks)
         await pool.close()
-    def run(self) -> float:
-        start = time.perf_counter()
-        asyncio.run(self._runner())
-        return time.perf_counter() - start
+    def run(self):
+        async def _wrap():
+            start = time.perf_counter()
+            await self._runner()
+            return time.perf_counter() - start
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(_wrap())
+        else:
+            return _wrap()
 
 def benchmark(parser_cls, urls: List[str]) -> float:
     return parser_cls(urls).run()

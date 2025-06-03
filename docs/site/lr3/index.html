@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>info - web-2025</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "info";
+        var mkdocs_page_input_path = "lr3.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> web-2025
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Главная</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">lr1</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr1/">common</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr1-api/">api</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">lr2</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr2_1/">task 1</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr2_2/">task 2</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">lr3</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">info</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr3-api/">api</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">web-2025</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">lr3</li>
+      <li class="breadcrumb-item active">info</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="docker">⚙️ Docker</h2>
+<pre><code class="language-yaml">version: &quot;3.9&quot;
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: my_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbname
+    ports:
+      - &quot;5432:5432&quot;
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - &quot;6379:6379&quot;
+
+  parser:
+    image: parser-image:latest
+    container_name: parser
+    restart: unless-stopped
+    ports:
+      - &quot;8001:8001&quot;
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: user
+      PGPASSWORD: password
+      PGDATABASE: dbname
+    depends_on: [db, redis]
+
+  celery-worker:
+    image: parser-image:latest
+    container_name: parser_celery_worker
+    restart: unless-stopped
+    command: celery -A celery_app worker -l info
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: user
+      PGPASSWORD: password
+      PGDATABASE: dbname
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on: [db, redis]
+
+  api:
+    image: main-app-image:latest
+    container_name: api
+    restart: unless-stopped
+    ports:
+      - &quot;8000:8000&quot;
+    environment:
+      PARSER_URL: http://parser:8001
+      DATABASE_URL: postgresql://user:password@db/dbname
+    depends_on: [parser, celery-worker]
+</code></pre>
+<hr />
+<h2 id="_1">⚙️ Описание контейнеров</h2>
+<table>
+<thead>
+<tr>
+<th>Контейнер</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>db</code></td>
+<td>PostgreSQL база данных</td>
+</tr>
+<tr>
+<td><code>redis</code></td>
+<td>Брокер и бэкенд для Celery</td>
+</tr>
+<tr>
+<td><code>parser</code></td>
+<td>FastAPI-приложение для парсинга URL</td>
+</tr>
+<tr>
+<td><code>celery-worker</code></td>
+<td>Обработка фоновых задач (парсинг)</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td>Основное FastAPI-приложение с роутами</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">🚀 Команды для запуска</h2>
+<pre><code class="language-bash">docker-compose up --build
+</code></pre>
+<h2 id="dockerfile-fastapi-">🐍 Dockerfile (FastAPI-приложение)</h2>
+<pre><code class="language-dockerfile">FROM python:3.13-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY docs .
+CMD [&quot;uvicorn&quot;, &quot;serve:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8001&quot;]
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../lr2_2/" class="btn btn-neutral float-left" title="task 2"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../lr3-api/" class="btn btn-neutral float-right" title="api">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../lr2_2/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../lr3-api/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

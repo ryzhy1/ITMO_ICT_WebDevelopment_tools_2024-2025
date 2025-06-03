@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel
+from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
@@ -76,3 +77,6 @@ class DashboardSummary(SQLModel):
 class SpendingTrend(SQLModel):
     month: str
     total_expense: float
+
+class ParseRequest(BaseModel):
+    urls: List[str]
