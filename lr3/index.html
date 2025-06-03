@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>task 1 - web-2025</title>
+    <title>info - web-2025</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "task 1";
-        var mkdocs_page_input_path = "lr2_1.md";
+        var mkdocs_page_name = "info";
+        var mkdocs_page_input_path = "lr3.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -51,17 +51,17 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">lr2</span></p>
-              <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">task 1</a>
-    <ul class="current">
-    </ul>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr2_1/">task 1</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../lr2_2/">task 2</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">lr3</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../lr3/">info</a>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">info</a>
+    <ul class="current">
+    </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../lr3-api/">api</a>
                   </li>
@@ -80,8 +80,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">lr2</li>
-      <li class="breadcrumb-item active">task 1</li>
+          <li class="breadcrumb-item">lr3</li>
+      <li class="breadcrumb-item active">info</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -90,37 +90,123 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="_1">📘 Лабораторная работа: сравнение вычислений</h1>
-<p>Multiprocessing даёт единственный реальный выигрыш, потому что каждый процесс работает на собственном ядре и не делит GIL, поэтому время падает немного больше чем в 6 раз. Threading и asyncio запускают лишь потоки внутри одного процесса, оставаясь под тем же GIL, — отсюда почти идентичные и существенно более длинные времена.</p>
+                <h2 id="docker">⚙️ Docker</h2>
+<pre><code class="language-yaml">version: &quot;3.9&quot;
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: my_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dbname
+    ports:
+      - &quot;5432:5432&quot;
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - &quot;6379:6379&quot;
+
+  parser:
+    image: parser-image:latest
+    container_name: parser
+    restart: unless-stopped
+    ports:
+      - &quot;8001:8001&quot;
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: user
+      PGPASSWORD: password
+      PGDATABASE: dbname
+    depends_on: [db, redis]
+
+  celery-worker:
+    image: parser-image:latest
+    container_name: parser_celery_worker
+    restart: unless-stopped
+    command: celery -A celery_app worker -l info
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: user
+      PGPASSWORD: password
+      PGDATABASE: dbname
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on: [db, redis]
+
+  api:
+    image: main-app-image:latest
+    container_name: api
+    restart: unless-stopped
+    ports:
+      - &quot;8000:8000&quot;
+    environment:
+      PARSER_URL: http://parser:8001
+      DATABASE_URL: postgresql://user:password@db/dbname
+    depends_on: [parser, celery-worker]
+</code></pre>
+<hr />
+<h2 id="_1">⚙️ Описание контейнеров</h2>
 <table>
 <thead>
 <tr>
-<th>Подход</th>
-<th>Время, с</th>
+<th>Контейнер</th>
+<th>Назначение</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>threading</td>
-<td>196.92</td>
+<td><code>db</code></td>
+<td>PostgreSQL база данных</td>
 </tr>
 <tr>
-<td>multiprocessing</td>
-<td>29.72</td>
+<td><code>redis</code></td>
+<td>Брокер и бэкенд для Celery</td>
 </tr>
 <tr>
-<td>asyncio</td>
-<td>197.09</td>
+<td><code>parser</code></td>
+<td>FastAPI-приложение для парсинга URL</td>
+</tr>
+<tr>
+<td><code>celery-worker</code></td>
+<td>Обработка фоновых задач (парсинг)</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td>Основное FastAPI-приложение с роутами</td>
 </tr>
 </tbody>
 </table>
-<p><img alt="benchmark.png»" src="../benchmark.png" /></p>
+<hr />
+<h2 id="_2">🚀 Команды для запуска</h2>
+<pre><code class="language-bash">docker-compose up --build
+</code></pre>
+<h2 id="dockerfile-fastapi-">🐍 Dockerfile (FastAPI-приложение)</h2>
+<pre><code class="language-dockerfile">FROM python:3.13-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY docs .
+CMD [&quot;uvicorn&quot;, &quot;serve:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8001&quot;]
+</code></pre>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../lr1-api/" class="btn btn-neutral float-left" title="api"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../lr2_2/" class="btn btn-neutral float-right" title="task 2">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../lr2_2/" class="btn btn-neutral float-left" title="task 2"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../lr3-api/" class="btn btn-neutral float-right" title="api">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -143,10 +229,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../lr1-api/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../lr2_2/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../lr2_2/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../lr3-api/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

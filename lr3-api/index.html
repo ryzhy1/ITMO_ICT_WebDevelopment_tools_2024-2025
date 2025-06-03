@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>task 1 - web-2025</title>
+    <title>api - web-2025</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "task 1";
-        var mkdocs_page_input_path = "lr2_1.md";
+        var mkdocs_page_name = "api";
+        var mkdocs_page_input_path = "lr3-api.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -51,19 +51,31 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">lr2</span></p>
-              <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">task 1</a>
-    <ul class="current">
-    </ul>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr2_1/">task 1</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../lr2_2/">task 2</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">lr3</span></p>
-              <ul>
+              <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../lr3/">info</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../lr3-api/">api</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">api</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#_2">🔐 Регистрация</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_3">🔑 Авторизация</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_4">📂 Получить категории</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_5">🧾 Синхронный парсинг категорий</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#celery">🕒 Асинхронный парсинг (через Celery)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_6">🔄 Проверка статуса задачи</a>
+    </li>
+    </ul>
                   </li>
               </ul>
       </div>
@@ -80,8 +92,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">lr2</li>
-      <li class="breadcrumb-item active">task 1</li>
+          <li class="breadcrumb-item">lr3</li>
+      <li class="breadcrumb-item active">api</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -90,37 +102,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="_1">📘 Лабораторная работа: сравнение вычислений</h1>
-<p>Multiprocessing даёт единственный реальный выигрыш, потому что каждый процесс работает на собственном ядре и не делит GIL, поэтому время падает немного больше чем в 6 раз. Threading и asyncio запускают лишь потоки внутри одного процесса, оставаясь под тем же GIL, — отсюда почти идентичные и существенно более длинные времена.</p>
-<table>
-<thead>
-<tr>
-<th>Подход</th>
-<th>Время, с</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>threading</td>
-<td>196.92</td>
-</tr>
-<tr>
-<td>multiprocessing</td>
-<td>29.72</td>
-</tr>
-<tr>
-<td>asyncio</td>
-<td>197.09</td>
-</tr>
-</tbody>
-</table>
-<p><img alt="benchmark.png»" src="../benchmark.png" /></p>
+                <h2 id="_1">📡 Примеры запросов</h2>
+<h4 id="_2">🔐 Регистрация</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://127.0.0.1:8000/auth/register&quot; \
+-H &quot;Content-Type: application/json&quot; \
+-d '{&quot;username&quot;: &quot;testuser&quot;, &quot;email&quot;: &quot;test@example.com&quot;, &quot;password&quot;: &quot;secret&quot;}'
+</code></pre>
+<h4 id="_3">🔑 Авторизация</h4>
+<pre><code class="language-bash">curl -X POST &quot;http://127.0.0.1:8000/auth/login&quot; \
+-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+-d &quot;username=testuser&amp;password=secret&quot;
+</code></pre>
+<h4 id="_4">📂 Получить категории</h4>
+<pre><code class="language-bash">curl -X GET &quot;http://127.0.0.1:8000/finance/categories&quot; \
+-H &quot;Authorization: Bearer $JWT_TOKEN&quot;
+</code></pre>
+<h4 id="_5">🧾 Синхронный парсинг категорий</h4>
+<pre><code class="language-bash">curl -X POST http://localhost:8000/finance/categories/parse \
+     -H &quot;Content-Type: application/json&quot; \
+     -d '{&quot;urls&quot;: [&quot;https://assistentus.ru/okved/razdel-a/&quot;, &quot;https://assistentus.ru/okved/razdel-b/&quot;]}'
+</code></pre>
+<h4 id="celery">🕒 Асинхронный парсинг (через Celery)</h4>
+<pre><code class="language-bash">curl -X POST http://localhost:8000/finance/categories/parse_async \
+     -H &quot;Content-Type: application/json&quot; \
+     -d '{&quot;urls&quot;: [&quot;https://assistentus.ru/okved/razdel-c/&quot;, &quot;https://assistentus.ru/okved/razdel-d/&quot;]}'
+</code></pre>
+<h4 id="_6">🔄 Проверка статуса задачи</h4>
+<pre><code class="language-bash">curl -X GET http://localhost:8000/finance/categories/parse_tasks/TASK_ID
+</code></pre>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../lr1-api/" class="btn btn-neutral float-left" title="api"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../lr2_2/" class="btn btn-neutral float-right" title="task 2">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../lr3/" class="btn btn-neutral float-left" title="info"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
 
   <hr/>
@@ -143,10 +157,8 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../lr1-api/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../lr3/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../lr2_2/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
